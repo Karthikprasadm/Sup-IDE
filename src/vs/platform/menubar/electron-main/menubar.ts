@@ -282,7 +282,7 @@ export class Menubar extends Disposable {
 		}
 
 		// Mac: Dock
-		if (isMacintosh && !this.appMenuInstalled) {
+		if (isMacintosh && !this.appMenuInstalled && app.dock) {
 			this.appMenuInstalled = true;
 
 			const dockMenu = new Menu();

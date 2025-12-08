@@ -21,6 +21,16 @@ This repo contains the full sourcecode for Void. If you're new, welcome!
 
 - 🚙 [Project Board](https://github.com/orgs/voideditor/projects/2)
 
+## Build & Run (quick start)
+
+For a reproducible setup, see `BUILDING.md`. Short version (PowerShell, Windows):
+
+1. Use Node 20.18.2 (portable copy in `.tools/node-v20.18.2-win-x64`):
+   `set PATH=%CD%\.tools\node-v20.18.2-win-x64;%PATH%`
+2. Install deps: `npm ci`
+3. Apply local patches (zod/SDK fixes): `npm run apply-patches`
+4. Build: `npm run compile` (and `npm run buildreact` if React bundles are missing)
+5. Run selfhost: `.\scripts\code.bat`
 
 ## Contributing
 
