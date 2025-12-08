@@ -25,7 +25,7 @@ This repo contains the full sourcecode for Void. If you're new, welcome!
 
 For a reproducible setup, see `BUILDING.md`. Short version (PowerShell, Windows):
 
-1. Use Node 20.18.2 (portable copy in `.tools/node-v20.18.2-win-x64`):  
+1. Use Node 20.18.2 (portable copy in `.tools/node-v20.18.2-win-x64`):
    `set PATH=%CD%\.tools\node-v20.18.2-win-x64;%PATH%`
 2. Install deps: `npm ci`
 3. Apply local patches (zod/SDK fixes): `npm run apply-patches`
