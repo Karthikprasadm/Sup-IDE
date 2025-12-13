@@ -11,6 +11,7 @@
   "private": true,
   "scripts": {
     "buildreact": "cd ./src/vs/workbench/contrib/void/browser/react/ && node build.js && cd ../../../../../../../",
+    "postbuildreact": "node ./scripts/fix-react-brand.js",
     "apply-patches": "powershell -ExecutionPolicy Bypass -File ./scripts/apply-local-patches.ps1",
     "watchreact": "cd ./src/vs/workbench/contrib/void/browser/react/ && node build.js --watch && cd ../../../../../../../",
     "watchreactd": "deemon npm run watchreact",
@@ -22,6 +23,7 @@
     "preinstall": "node build/npm/preinstall.js",
     "postinstall": "node build/npm/postinstall.js",
     "compile": "node ./node_modules/gulp/bin/gulp.js compile",
+    "postcompile": "node ./scripts/copy-codicon.js",
     "watch": "npm-run-all -lp watch-client watch-extensions",
     "watchd": "deemon npm run watch",
     "watch-webd": "deemon npm run watch-web",
@@ -85,7 +87,6 @@
     "@octokit/plugin-rest-endpoint-methods": "9.0.0",
     "@octokit/request": "8.4.1",
     "@octokit/request-error": "5.1.1",
-    "semver": "^5.7.2",
     "zod": "4.1.0",
     "zod-to-json-schema": "3.25.0",
     "@modelcontextprotocol/sdk": {
@@ -160,6 +161,7 @@
     "zod": "4.1.0"
   },
   "devDependencies": {
+    "semver": "5.7.2",
     "@playwright/test": "^1.50.0",
     "@stylistic/eslint-plugin-ts": "^2.8.0",
     "@tailwindcss/typography": "^0.5.16",
@@ -283,6 +285,55 @@
   },
   "bugs": {
     "url": "https://github.com/microsoft/vscode/issues"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "sup.chat.askSelection",
+        "title": "Sup: Ask AI About Selection…",
+        "category": "Sup"
+      },
+      {
+        "command": "sup.chat.quickfixAI",
+        "title": "Sup: AI QuickFix",
+        "category": "Sup"
+      },
+      {
+        "command": "sup.chat.explain",
+        "title": "Sup: Explain Code",
+        "category": "Sup"
+      },
+      {
+        "command": "sup.chat.fix",
+        "title": "Sup: Fix Code",
+        "category": "Sup"
+      },
+      {
+        "command": "sup.chat.optimize",
+        "title": "Sup: Optimize Code",
+        "category": "Sup"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "sup.chat.askSelection",
+          "group": "navigation",
+          "when": "editorTextFocus"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "sup.chat.quickfixAI",
+          "group": "navigation",
+          "when": "editorHasCodeActionsProvider && editorTextFocus"
+        }
+      ],
+      "commandPalette": [
+      ]
+    },
+    "viewsContainers": {},
+    "views": {}
   },
   "optionalDependencies": {
     "windows-foreground-love": "0.5.0"

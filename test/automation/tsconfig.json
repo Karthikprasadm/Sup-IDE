@@ -9,6 +9,12 @@
 		"sourceMap": true,
 		"declaration": true,
 		"skipLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"playwright-core/types/*": [
+				"../../node_modules/playwright/node_modules/playwright-core/types/*"
+			]
+		},
 		"lib": [
 			"esnext", // for #201187
 			"dom"

@@ -7,6 +7,8 @@ import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { ProviderName, SettingName, displayInfoOfSettingName, providerNames, VoidStatefulModelInfo, customSettingNamesOfProvider, RefreshableProviderName, refreshableProviderNames, displayInfoOfProviderName, nonlocalProviderNames, localProviderNames, GlobalSettingName, featureNames, displayInfoOfFeatureName, isProviderNameDisabled, FeatureName, hasDownloadButtonsOnModelsProviderNames, subTextMdOfProviderName } from '../../../../common/voidSettingsTypes.js'
 import ErrorBoundary from '../sidebar-tsx/ErrorBoundary.js'
 import { VoidButtonBgDarken, VoidCustomDropdownBox, VoidInputBox2, VoidSimpleInputBox, VoidSwitch } from '../util/inputs.js'
+import { useTokenUsageSetting } from '../hooks/useTokenUsageSetting.js'
+import { usePromptHistorySetting } from '../hooks/usePromptHistorySetting.js'
 import { useAccessor, useIsDark, useIsOptedOut, useRefreshModelListener, useRefreshModelState, useSettingsState } from '../util/services.js'
 import { X, RefreshCw, Loader2, Check, Asterisk, Plus } from 'lucide-react'
 import { URI } from '../../../../../../../base/common/uri.js'
@@ -1057,6 +1059,8 @@ export const Settings = () => {
 	const storageService = accessor.get('IStorageService')
 	const metricsService = accessor.get('IMetricsService')
 	const isOptedOut = useIsOptedOut()
+	const { enabled: tokenUsageEnabled, setEnabled: setTokenUsageEnabled } = useTokenUsageSetting()
+	const { enabled: promptHistoryEnabled, setEnabled: setPromptHistoryEnabled } = usePromptHistorySetting()
 
 	const onDownload = (t: 'Chats' | 'Settings') => {
 		let dataStr: string
@@ -1161,7 +1165,7 @@ export const Settings = () => {
 
 					<div className='max-w-3xl'>
 
-						<h1 className='text-2xl w-full'>{`Void's Settings`}</h1>
+						<h1 className='text-2xl w-full'>{`SUP's Settings`}</h1>
 
 						<div className='w-full h-[1px] my-2' />
 
@@ -1485,6 +1489,36 @@ export const Settings = () => {
 													}}
 												/>
 												<span className='text-void-fg-3 text-xs pointer-events-none'>{'Opt-out (requires restart)'}</span>
+											</div>
+										</ErrorBoundary>
+									</div>
+
+									<div className='my-2'>
+										<ErrorBoundary>
+											<div className='flex items-center gap-x-2 my-2'>
+												<VoidSwitch
+													size='xs'
+													value={tokenUsageEnabled}
+													onChange={(newVal) => {
+														setTokenUsageEnabled(newVal);
+													}}
+												/>
+												<span className='text-void-fg-3 text-xs pointer-events-none'>{'Show token usage indicator in chat'}</span>
+											</div>
+										</ErrorBoundary>
+									</div>
+
+									<div className='my-2'>
+										<ErrorBoundary>
+											<div className='flex items-center gap-x-2 my-2'>
+												<VoidSwitch
+													size='xs'
+													value={promptHistoryEnabled}
+													onChange={(newVal) => {
+														setPromptHistoryEnabled(newVal);
+													}}
+												/>
+												<span className='text-void-fg-3 text-xs pointer-events-none'>{'Show prompt history bar in chat'}</span>
 											</div>
 										</ErrorBoundary>
 									</div>

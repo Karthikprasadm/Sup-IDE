@@ -14,7 +14,7 @@ import { Tool as GeminiTool, FunctionDeclaration, GoogleGenAI, ThinkingConfig, S
 import { GoogleAuth } from 'google-auth-library'
 /* eslint-enable */
 
-import { AnthropicLLMChatMessage, GeminiLLMChatMessage, LLMChatMessage, LLMFIMMessage, ModelListParams, OllamaModelResponse, OnError, OnFinalMessage, OnText, RawToolCallObj, RawToolParamsObj } from '../../common/sendLLMMessageTypes.js';
+import { AnthropicLLMChatMessage, GeminiLLMChatMessage, LLMChatMessage, LLMFIMMessage, ModelListParams, OllamaModelResponse, OnError, OnFinalMessage, OnText, OnUsage, RawToolCallObj, RawToolParamsObj } from '../../common/sendLLMMessageTypes.js';
 import { ChatMode, displayInfoOfProviderName, ModelSelectionOptions, OverridesOfModel, ProviderName, SettingsOfProvider } from '../../common/voidSettingsTypes.js';
 import { getSendableReasoningInfo, getModelCapabilities, getProviderCapabilities, defaultProviderSettings, getReservedOutputTokenSpace } from '../../common/modelCapabilities.js';
 import { extractReasoningWrapper, extractXMLToolsWrapper } from './extractGrammar.js';
@@ -36,6 +36,7 @@ type InternalCommonMessageParams = {
 	onText: OnText;
 	onFinalMessage: OnFinalMessage;
 	onError: OnError;
+	onUsage: OnUsage;
 	providerName: ProviderName;
 	settingsOfProvider: SettingsOfProvider;
 	modelSelectionOptions: ModelSelectionOptions | undefined;
@@ -270,7 +271,7 @@ const rawToolCallObjOfAnthropicParams = (toolBlock: Anthropic.Messages.ToolUseBl
 // ------------ OPENAI-COMPATIBLE ------------
 
 
-const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, modelName: modelName_, _setAborter, providerName, chatMode, separateSystemMessage, overridesOfModel, mcpTools }: SendChatParams_Internal) => {
+const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onError, onUsage, settingsOfProvider, modelSelectionOptions, modelName: modelName_, _setAborter, providerName, chatMode, separateSystemMessage, overridesOfModel, mcpTools }: SendChatParams_Internal) => {
 	const {
 		modelName,
 		specialToolFormat,
@@ -333,6 +334,9 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 	let toolId = ''
 	let toolParamsStr = ''
 
+	let promptTokens = 0
+	let completionTokens = 0
+
 	openai.chat.completions
 		.create(options)
 		.then(async response => {
@@ -362,6 +366,14 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 					fullReasoningSoFar += newReasoning
 				}
 
+				// usage (final chunks may include)
+				// @ts-ignore
+				const usage = chunk?.usage;
+				if (usage) {
+					promptTokens = usage.prompt_tokens ?? promptTokens;
+					completionTokens = usage.completion_tokens ?? completionTokens;
+				}
+
 				// call onText
 				onText({
 					fullText: fullTextSoFar,
@@ -379,6 +391,23 @@ const _sendOpenAICompatibleChat = async ({ messages, onText, onFinalMessage, onE
 				const toolCallObj = toolCall ? { toolCall } : {}
 				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, ...toolCallObj });
 			}
+
+			// best-effort usage (if not already captured)
+			// @ts-ignore
+			if (!promptTokens && !completionTokens && response?.usage) {
+				// @ts-ignore
+				promptTokens = response.usage.prompt_tokens ?? 0;
+				// @ts-ignore
+				completionTokens = response.usage.completion_tokens ?? 0;
+			}
+			onUsage({
+				promptTokens,
+				completionTokens,
+				totalTokens: promptTokens + completionTokens,
+				providerName,
+				modelName,
+				isLocal: providerName === 'ollama' || providerName === 'lmStudio' || providerName === 'vLLM' || providerName === 'liteLLM',
+			});
 		})
 		// when error/fail - this catches errors of both .create() and .then(for await)
 		.catch(error => {
@@ -455,7 +484,7 @@ const anthropicTools = (chatMode: ChatMode | null, mcpTools: InternalToolInfo[] 
 
 
 // ------------ ANTHROPIC ------------
-const sendAnthropicChat = async ({ messages, providerName, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName: modelName_, _setAborter, separateSystemMessage, chatMode, mcpTools }: SendChatParams_Internal) => {
+const sendAnthropicChat = async ({ messages, providerName, onText, onFinalMessage, onError, onUsage, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName: modelName_, _setAborter, separateSystemMessage, chatMode, mcpTools }: SendChatParams_Internal) => {
 	const {
 		modelName,
 		specialToolFormat,
@@ -507,6 +536,8 @@ const sendAnthropicChat = async ({ messages, providerName, onText, onFinalMessag
 
 	let fullToolName = ''
 	let fullToolParams = ''
+	let usagePrompt = 0
+	let usageCompletion = 0
 
 
 	const runOnText = () => {
@@ -568,7 +599,22 @@ const sendAnthropicChat = async ({ messages, providerName, onText, onFinalMessag
 		const toolCall = tools[0] && rawToolCallObjOfAnthropicParams(tools[0])
 		const toolCallObj = toolCall ? { toolCall } : {}
 
+		// usage best-effort
+		// @ts-ignore
+		const usage = response?.usage
+		usagePrompt = usage?.input_tokens ?? 0
+		usageCompletion = usage?.output_tokens ?? 0
+
 		onFinalMessage({ fullText, fullReasoning, anthropicReasoning, ...toolCallObj })
+
+		onUsage({
+			promptTokens: usagePrompt,
+			completionTokens: usageCompletion,
+			totalTokens: usagePrompt + usageCompletion,
+			providerName,
+			modelName,
+			isLocal: false,
+		})
 	})
 	// on error
 	stream.on('error', (error) => {
@@ -720,6 +766,7 @@ const sendGeminiChat = async ({
 	onText,
 	onFinalMessage,
 	onError,
+	onUsage,
 	settingsOfProvider,
 	overridesOfModel,
 	modelName: modelName_,
@@ -777,6 +824,9 @@ const sendGeminiChat = async ({
 	let toolParamsStr = ''
 	let toolId = ''
 
+	let usagePrompt = 0
+	let usageCompletion = 0
+
 
 	genAI.models.generateContentStream({
 		model: modelName,
@@ -824,6 +874,20 @@ const sendGeminiChat = async ({
 				const toolCallObj = toolCall ? { toolCall } : {}
 				onFinalMessage({ fullText: fullTextSoFar, fullReasoning: fullReasoningSoFar, anthropicReasoning: null, ...toolCallObj });
 			}
+
+			// usage best-effort (available on response)
+			// @ts-ignore
+			const usage = stream?.response?.usageMetadata;
+			usagePrompt = usage?.promptTokenCount ?? 0;
+			usageCompletion = usage?.candidatesTokenCount ?? 0;
+			onUsage({
+				promptTokens: usagePrompt,
+				completionTokens: usageCompletion,
+				totalTokens: (usage?.totalTokenCount ?? (usagePrompt + usageCompletion)),
+				providerName,
+				modelName,
+				isLocal: false,
+			});
 		})
 		.catch(error => {
 			const message = error?.message

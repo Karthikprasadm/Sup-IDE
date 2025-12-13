@@ -12,6 +12,7 @@ for /f "tokens=2 delims=:," %%a in ('findstr /R /C:"\"nameShort\":.*" product.js
 set NAMESHORT=%NAMESHORT: "=%
 set NAMESHORT=%NAMESHORT:"=%.exe
 set CODE=.build\electron\%NAMESHORT%
+if not exist "%CODE%" set CODE=.build\electron\Void.exe
 
 :: Manage built-in extensions
 if "%~1"=="--builtin" goto builtin

@@ -15,6 +15,7 @@ export const sendLLMMessage = async ({
 	onText: onText_,
 	onFinalMessage: onFinalMessage_,
 	onError: onError_,
+	onUsage: onUsage_,
 	abortRef: abortRef_,
 	logging: { loggingName, loggingExtras },
 	settingsOfProvider,
@@ -76,9 +77,18 @@ export const sendLLMMessage = async ({
 		if (_didAbort) return
 		console.error('sendLLMMessage onError:', errorMessage)
 
+		// clearer guidance for connection refused (common when local providers are down)
+		if (typeof errorMessage === 'string' && errorMessage.includes('ECONNREFUSED')) {
+			if (providerName === 'ollama') {
+				errorMessage = 'Sup could not reach Ollama. Please ensure Ollama is running locally and the requested model is installed/downloaded.';
+			} else {
+				errorMessage = `Sup could not reach ${displayInfoOfProviderName(providerName).title}. Please ensure the service is running and the endpoint is correct.`;
+			}
+		}
+
 		// handle failed to fetch errors, which give 0 information by design
 		if (errorMessage === 'TypeError: fetch failed')
-			errorMessage = `Failed to fetch from ${displayInfoOfProviderName(providerName).title}. This likely means you specified the wrong endpoint in Void's Settings, or your local model provider like Ollama is powered off.`
+			errorMessage = `Failed to fetch from ${displayInfoOfProviderName(providerName).title}. This likely means you specified the wrong endpoint in SUP's Settings, or your local model provider like Ollama is powered off.`
 
 		captureLLMEvent(`${loggingName} - Error`, { error: errorMessage })
 		onError_({ message: errorMessage, fullError })
@@ -108,12 +118,12 @@ export const sendLLMMessage = async ({
 		}
 		const { sendFIM, sendChat } = implementation
 		if (messagesType === 'chatMessages') {
-			await sendChat({ messages: messages_, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName, _setAborter, providerName, separateSystemMessage, chatMode, mcpTools })
+			await sendChat({ messages: messages_, onText, onFinalMessage, onError, onUsage: onUsage_, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName, _setAborter, providerName, separateSystemMessage, chatMode, mcpTools })
 			return
 		}
 		if (messagesType === 'FIMMessage') {
 			if (sendFIM) {
-				await sendFIM({ messages: messages_, onText, onFinalMessage, onError, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName, _setAborter, providerName, separateSystemMessage })
+				await sendFIM({ messages: messages_, onText, onFinalMessage, onError, onUsage: onUsage_, settingsOfProvider, modelSelectionOptions, overridesOfModel, modelName, _setAborter, providerName, separateSystemMessage })
 				return
 			}
 			onError({ message: `Error running Autocomplete with ${providerName} - ${modelName}.`, fullError: null })

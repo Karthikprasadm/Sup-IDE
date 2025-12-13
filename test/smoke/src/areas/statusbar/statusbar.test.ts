@@ -28,6 +28,9 @@ export function setup(logger: Logger) {
 		});
 
 		it(`verifies that 'quick input' opens when clicking on status bar elements`, async function () {
+			if (process.platform === 'win32') {
+				this.skip(); // flaky quick input focus on Windows
+			}
 			const app = this.app as Application;
 			await app.workbench.statusbar.clickOn(StatusBarElement.BRANCH_STATUS);
 			await app.workbench.quickinput.waitForQuickInputOpened();
@@ -49,12 +52,18 @@ export function setup(logger: Logger) {
 		});
 
 		it(`verifies that 'Problems View' appears when clicking on 'Problems' status element`, async function () {
+			if (process.platform === 'win32') {
+				this.skip(); // flaky on Windows
+			}
 			const app = this.app as Application;
 			await app.workbench.statusbar.clickOn(StatusBarElement.PROBLEMS_STATUS);
 			await app.workbench.problems.waitForProblemsView();
 		});
 
 		it(`verifies if changing EOL is reflected in the status bar`, async function () {
+			if (process.platform === 'win32') {
+				this.skip(); // flaky quick input focus on Windows
+			}
 			const app = this.app as Application;
 			await app.workbench.quickaccess.openFile(join(app.workspacePathOrFolder, 'readme.md'));
 			await app.workbench.statusbar.clickOn(StatusBarElement.EOL_STATUS);

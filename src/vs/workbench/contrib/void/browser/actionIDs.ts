@@ -7,6 +7,18 @@ export const VOID_CTRL_K_ACTION_ID = 'void.ctrlKAction'
 
 export const VOID_ACCEPT_DIFF_ACTION_ID = 'void.acceptDiff'
 
+export const VOID_AI_COMMAND_PALETTE_ACTION_ID = 'void.aiCommandPalette'
+
+export const SUP_CHAT_ASK_SELECTION_ACTION_ID = 'sup.chat.askSelection'
+
+export const SUP_CHAT_QUICKFIX_ACTION_ID = 'sup.chat.quickfixAI'
+
+export const SUP_CHAT_TOGGLE_SIDEBAR_ACTION_ID = 'sup.chat.toggleSidebar'
+
+export const SUP_CHAT_EXPLAIN_ACTION_ID = 'sup.chat.explain'
+export const SUP_CHAT_FIX_ACTION_ID = 'sup.chat.fix'
+export const SUP_CHAT_OPTIMIZE_ACTION_ID = 'sup.chat.optimize'
+
 export const VOID_REJECT_DIFF_ACTION_ID = 'void.rejectDiff'
 
 export const VOID_GOTO_NEXT_DIFF_ACTION_ID = 'void.goToNextDiff'

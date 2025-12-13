@@ -15,6 +15,8 @@ export async function setTerminalTestSettings(app: Application, additionalSettin
 		// Use the DOM renderer for smoke tests so they can be inspected in the playwright trace
 		// viewer
 		['terminal.integrated.gpuAcceleration', '"off"'],
+		// Avoid Windows ConPTY crashes/asserts in automation; force winpty backend
+		['terminal.integrated.windowsEnableConpty', 'false'],
 		...additionalSettings
 	]);
 
