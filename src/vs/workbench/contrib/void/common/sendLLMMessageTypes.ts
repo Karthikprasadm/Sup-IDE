@@ -95,6 +95,7 @@ export type OnText = (p: { fullText: string; fullReasoning: string; toolCall?: R
 export type OnFinalMessage = (p: { fullText: string; fullReasoning: string; toolCall?: RawToolCallObj; anthropicReasoning: AnthropicReasoning[] | null }) => void // id is tool_use_id
 export type OnError = (p: { message: string; fullError: Error | null }) => void
 export type OnAbort = () => void
+export type OnUsage = (p: { promptTokens: number; completionTokens: number; totalTokens: number; providerName: ProviderName; modelName: string; isLocal: boolean }) => void
 export type AbortRef = { current: (() => void) | null }
 
 
@@ -114,6 +115,7 @@ export type ServiceSendLLMMessageParams = {
 	onText: OnText;
 	onFinalMessage: OnFinalMessage;
 	onError: OnError;
+	onUsage?: OnUsage;
 	logging: { loggingName: string, loggingExtras?: { [k: string]: any } };
 	modelSelection: ModelSelection | null;
 	modelSelectionOptions: ModelSelectionOptions | undefined;
@@ -126,6 +128,7 @@ export type SendLLMMessageParams = {
 	onText: OnText;
 	onFinalMessage: OnFinalMessage;
 	onError: OnError;
+	onUsage: OnUsage;
 	logging: { loggingName: string, loggingExtras?: { [k: string]: any } };
 	abortRef: AbortRef;
 
@@ -140,7 +143,7 @@ export type SendLLMMessageParams = {
 
 
 // can't send functions across a proxy, use listeners instead
-export type BlockedMainLLMMessageParams = 'onText' | 'onFinalMessage' | 'onError' | 'abortRef'
+export type BlockedMainLLMMessageParams = 'onText' | 'onFinalMessage' | 'onError' | 'onUsage' | 'abortRef'
 export type MainSendLLMMessageParams = Omit<SendLLMMessageParams, BlockedMainLLMMessageParams> & { requestId: string } & SendLLMType
 
 export type MainLLMMessageAbortParams = { requestId: string }
@@ -148,6 +151,7 @@ export type MainLLMMessageAbortParams = { requestId: string }
 export type EventLLMMessageOnTextParams = Parameters<OnText>[0] & { requestId: string }
 export type EventLLMMessageOnFinalMessageParams = Parameters<OnFinalMessage>[0] & { requestId: string }
 export type EventLLMMessageOnErrorParams = Parameters<OnError>[0] & { requestId: string }
+export type EventLLMMessageOnUsageParams = Parameters<OnUsage>[0] & { requestId: string }
 
 // service -> main -> internal -> event (back to main)
 // (browser)

@@ -8,7 +8,7 @@
 
 import { IServerChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { Emitter, Event } from '../../../../base/common/event.js';
-import { EventLLMMessageOnTextParams, EventLLMMessageOnErrorParams, EventLLMMessageOnFinalMessageParams, MainSendLLMMessageParams, AbortRef, SendLLMMessageParams, MainLLMMessageAbortParams, ModelListParams, EventModelListOnSuccessParams, EventModelListOnErrorParams, OllamaModelResponse, OpenaiCompatibleModelResponse, MainModelListParams, } from '../common/sendLLMMessageTypes.js';
+import { EventLLMMessageOnTextParams, EventLLMMessageOnErrorParams, EventLLMMessageOnFinalMessageParams, EventLLMMessageOnUsageParams, MainSendLLMMessageParams, AbortRef, SendLLMMessageParams, MainLLMMessageAbortParams, ModelListParams, EventModelListOnSuccessParams, EventModelListOnErrorParams, OllamaModelResponse, OpenaiCompatibleModelResponse, MainModelListParams, } from '../common/sendLLMMessageTypes.js';
 import { sendLLMMessage } from './llmMessage/sendLLMMessage.js'
 import { IMetricsService } from '../common/metricsService.js';
 import { sendLLMMessageToProviderImplementation } from './llmMessage/sendLLMMessage.impl.js';
@@ -22,6 +22,7 @@ export class LLMMessageChannel implements IServerChannel {
 		onText: new Emitter<EventLLMMessageOnTextParams>(),
 		onFinalMessage: new Emitter<EventLLMMessageOnFinalMessageParams>(),
 		onError: new Emitter<EventLLMMessageOnErrorParams>(),
+		onUsage: new Emitter<EventLLMMessageOnUsageParams>(),
 	}
 
 	// aborters for above
@@ -56,6 +57,7 @@ export class LLMMessageChannel implements IServerChannel {
 		if (event === 'onText_sendLLMMessage') return this.llmMessageEmitters.onText.event;
 		else if (event === 'onFinalMessage_sendLLMMessage') return this.llmMessageEmitters.onFinalMessage.event;
 		else if (event === 'onError_sendLLMMessage') return this.llmMessageEmitters.onError.event;
+		else if (event === 'onUsage_sendLLMMessage') return this.llmMessageEmitters.onUsage.event;
 		// list
 		else if (event === 'onSuccess_list_ollama') return this.listEmitters.ollama.success.event;
 		else if (event === 'onError_list_ollama') return this.listEmitters.ollama.error.event;
@@ -107,6 +109,9 @@ export class LLMMessageChannel implements IServerChannel {
 			onError: (p) => {
 				console.log('sendLLM: firing err');
 				this.llmMessageEmitters.onError.fire({ requestId, ...p });
+			},
+			onUsage: (p) => {
+				this.llmMessageEmitters.onUsage.fire({ requestId, ...p });
 			},
 			abortRef: this._infoOfRunningRequest[requestId].abortRef,
 		}

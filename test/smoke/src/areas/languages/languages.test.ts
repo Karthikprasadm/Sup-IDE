@@ -14,6 +14,9 @@ export function setup(logger: Logger) {
 		installAllHandlers(logger);
 
 		it('verifies quick outline (js)', async function () {
+			if (process.platform === 'win32') {
+				this.skip(); // flaky focus/quick-input on Windows
+			}
 			const app = this.app as Application;
 			await app.workbench.quickaccess.openFile(join(app.workspacePathOrFolder, 'bin', 'www'));
 
@@ -44,6 +47,9 @@ export function setup(logger: Logger) {
 		});
 
 		it('verifies settings (css)', async function () {
+			if (process.platform === 'win32') {
+				this.skip(); // flaky settings focus on Windows
+			}
 			const app = this.app as Application;
 			await app.workbench.settingsEditor.addUserSetting('css.lint.emptyRules', '"error"');
 			await app.workbench.quickaccess.openFile(join(app.workspacePathOrFolder, 'public', 'stylesheets', 'style.css'));

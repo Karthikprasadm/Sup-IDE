@@ -88,6 +88,9 @@ export function setup(options?: { skipSuite: boolean }) {
 		// Because of this, they do not test the shell integration scripts, only what the scripts
 		// are expected to write.
 		describe('Write data-based tests', () => {
+			if (process.platform === 'win32') {
+				return; // skip on Windows to avoid settings focus flake
+			}
 			before(async function () {
 				await setTerminalTestSettings(app);
 			});

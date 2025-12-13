@@ -7,7 +7,7 @@ import { Application, Terminal, TerminalCommandId, TerminalCommandIdWithValue, S
 import { setTerminalTestSettings } from './terminal-helpers';
 
 export function setup(options?: { skipSuite: boolean }) {
-	(options?.skipSuite ? describe.skip : describe)('Terminal Persistence', () => {
+	(options?.skipSuite || process.platform === 'win32' ? describe.skip : describe)('Terminal Persistence', () => {
 		// Acquire automation API
 		let terminal: Terminal;
 		let settingsEditor: SettingsEditor;

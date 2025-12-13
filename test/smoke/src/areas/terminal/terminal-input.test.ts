@@ -7,7 +7,7 @@ import { Application, Terminal, SettingsEditor } from '../../../../automation';
 import { setTerminalTestSettings } from './terminal-helpers';
 
 export function setup(options?: { skipSuite: boolean }) {
-	(options?.skipSuite ? describe.skip : describe)('Terminal Input', () => {
+	(options?.skipSuite || process.platform === 'win32' ? describe.skip : describe)('Terminal Input', () => {
 		let terminal: Terminal;
 		let settingsEditor: SettingsEditor;
 

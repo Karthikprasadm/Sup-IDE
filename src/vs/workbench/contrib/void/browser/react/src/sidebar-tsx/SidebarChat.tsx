@@ -15,6 +15,8 @@ import { IDisposable } from '../../../../../../../base/common/lifecycle.js';
 import { ErrorDisplay } from './ErrorDisplay.js';
 import { BlockCode, TextAreaFns, VoidCustomDropdownBox, VoidInputBox2, VoidSlider, VoidSwitch, VoidDiffEditor } from '../util/inputs.js';
 import { ModelDropdown, } from '../void-settings-tsx/ModelDropdown.js';
+import { TokenUsageIndicator } from '../components/TokenUsageIndicator.js';
+import { PromptHistoryBar } from '../components/PromptHistoryBar.js';
 import { PastThreadsList } from './SidebarThreadSelector.js';
 import { VOID_CTRL_L_ACTION_ID } from '../../../actionIDs.js';
 import { VOID_OPEN_SETTINGS_ACTION_ID } from '../../../voidSettingsPane.js';
@@ -2831,6 +2833,7 @@ const CommandBarInChat = () => {
 					{fileDetailsButton}
 				</div>
 				<div className="flex gap-2 items-center">
+					<TokenUsageIndicator />
 					{acceptRejectAllButtons}
 					{threadStatusHTML}
 				</div>
@@ -3113,6 +3116,17 @@ export const SidebarChat = () => {
 
 	const threadPageInput = <div key={'input' + chatThreadsState.currentThreadId}>
 		<div className='px-4'>
+			<PromptHistoryBar
+				onSelectPrompt={(text) => {
+					textAreaFnsRef.current?.setValue(text);
+					textAreaRef.current?.focus();
+				}}
+				onNewThread={() => {
+					chatThreadsService.openNewThread();
+					textAreaFnsRef.current?.setValue('');
+					textAreaRef.current?.focus();
+				}}
+			/>
 			<CommandBarInChat />
 		</div>
 		<div className='px-2 pb-2'>

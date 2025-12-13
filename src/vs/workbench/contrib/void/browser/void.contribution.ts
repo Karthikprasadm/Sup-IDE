@@ -11,8 +11,12 @@ import './editCodeService.js'
 import './sidebarActions.js'
 import './sidebarPane.js'
 
-// register quick edit (Ctrl+K)
+// register quick edit (Ctrl+Shift+K) and AI command palette (Ctrl/Cmd+K)
 import './quickEditActions.js'
+import './aiCommandPaletteAction.js'
+import './askAiSelectionAction.js'
+import './quickfixAiAction.js'
+import './supChatSlashCommands.js'
 
 
 // register Autocomplete

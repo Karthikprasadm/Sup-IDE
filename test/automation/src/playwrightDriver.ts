@@ -7,7 +7,7 @@ import * as playwright from '@playwright/test';
 import type { Protocol } from 'playwright-core/types/protocol';
 import { dirname, join } from 'path';
 import { promises } from 'fs';
-import { IWindowDriver } from './driver';
+import { IWindowDriver, ILocaleInfo, ILocalizedStrings } from './driver';
 import { PageFunction } from 'playwright-core/types/structs';
 import { measureAndLog } from './logger';
 import { LaunchOptions } from './code';
@@ -303,19 +303,21 @@ export class PlaywrightDriver {
 	}
 
 	async getLocaleInfo() {
-		return this.evaluateWithDriver(([driver]) => driver.getLocaleInfo());
+		return this.evaluateWithDriver<ILocaleInfo>(([driver]: [IWindowDriver]) => driver.getLocaleInfo());
 	}
 
 	async getLocalizedStrings() {
-		return this.evaluateWithDriver(([driver]) => driver.getLocalizedStrings());
+		return this.evaluateWithDriver<ILocalizedStrings>(([driver]: [IWindowDriver]) => driver.getLocalizedStrings());
 	}
 
 	async getLogs() {
 		return this.page.evaluate(([driver]) => driver.getLogs(), [await this.getDriverHandle()] as const);
 	}
 
-	private async evaluateWithDriver<T>(pageFunction: PageFunction<IWindowDriver[], T>) {
-		return this.page.evaluate(pageFunction, [await this.getDriverHandle()]);
+	private async evaluateWithDriver<T>(pageFunction: PageFunction<any, T>): Promise<T> {
+		const driverHandle = await this.getDriverHandle();
+		// Passing the JSHandle for window.driver through evaluate; cast to align types across differing Playwright core versions.
+		return this.page.evaluate(pageFunction as PageFunction<any, T>, [driverHandle] as any);
 	}
 
 	wait(ms: number): Promise<void> {
@@ -323,7 +325,7 @@ export class PlaywrightDriver {
 	}
 
 	whenWorkbenchRestored(): Promise<void> {
-		return this.evaluateWithDriver(([driver]) => driver.whenWorkbenchRestored());
+		return this.evaluateWithDriver<void>(([driver]: [IWindowDriver]) => driver.whenWorkbenchRestored());
 	}
 
 	private async getDriverHandle(): Promise<playwright.JSHandle<IWindowDriver>> {

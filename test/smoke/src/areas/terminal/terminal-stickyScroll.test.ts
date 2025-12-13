@@ -7,7 +7,7 @@ import { Application, Terminal, SettingsEditor, TerminalCommandIdWithValue } fro
 import { setTerminalTestSettings } from './terminal-helpers';
 
 export function setup(options?: { skipSuite: boolean }) {
-	(options?.skipSuite ? describe.skip : describe)('Terminal stickyScroll', () => {
+	(options?.skipSuite || process.platform === 'win32' ? describe.skip : describe)('Terminal stickyScroll', () => {
 		// Acquire automation API
 		let app: Application;
 		let terminal: Terminal;

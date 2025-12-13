@@ -40,7 +40,7 @@ registerAction2(class extends Action2 {
 			f1: true,
 			title: localize2('voidQuickEditAction', 'Void: Quick Edit'),
 			keybinding: {
-				primary: KeyMod.CtrlCmd | KeyCode.KeyK,
+				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyK,
 				weight: KeybindingWeight.VoidExtension,
 				when: ContextKeyExpr.deserialize('editorFocus && !terminalFocus'),
 			}

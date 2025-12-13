@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------*/
 
 import { EventLLMMessageOnTextParams, EventLLMMessageOnErrorParams, EventLLMMessageOnFinalMessageParams, ServiceSendLLMMessageParams, MainSendLLMMessageParams, MainLLMMessageAbortParams, ServiceModelListParams, EventModelListOnSuccessParams, EventModelListOnErrorParams, MainModelListParams, OllamaModelResponse, OpenaiCompatibleModelResponse, } from './sendLLMMessageTypes.js';
+import { EventLLMMessageOnUsageParams } from './sendLLMMessageTypes.js';
 
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { registerSingleton, InstantiationType } from '../../../../platform/instantiation/common/extensions.js';
 import { IChannel } from '../../../../base/parts/ipc/common/ipc.js';
 import { IMainProcessService } from '../../../../platform/ipc/common/mainProcessService.js';
 import { generateUuid } from '../../../../base/common/uuid.js';
-import { Event } from '../../../../base/common/event.js';
+import { Event, Emitter } from '../../../../base/common/event.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { IVoidSettingsService } from './voidSettingsService.js';
 import { IMCPService } from './mcpService.js';
@@ -24,6 +25,7 @@ export interface ILLMMessageService {
 	abort: (requestId: string) => void;
 	ollamaList: (params: ServiceModelListParams<OllamaModelResponse>) => void;
 	openAICompatibleList: (params: ServiceModelListParams<OpenaiCompatibleModelResponse>) => void;
+	onUsage: Event<EventLLMMessageOnUsageParams>;
 }
 
 
@@ -38,6 +40,7 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 		onText: {} as { [eventId: string]: ((params: EventLLMMessageOnTextParams) => void) },
 		onFinalMessage: {} as { [eventId: string]: ((params: EventLLMMessageOnFinalMessageParams) => void) },
 		onError: {} as { [eventId: string]: ((params: EventLLMMessageOnErrorParams) => void) },
+		onUsage: {} as { [eventId: string]: ((params: EventLLMMessageOnUsageParams) => void) },
 		onAbort: {} as { [eventId: string]: (() => void) }, // NOT sent over the channel, result is instant when we call .abort()
 	}
 
@@ -65,6 +68,7 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 		@IMCPService private readonly mcpService: IMCPService,
 	) {
 		super()
+		this.onUsage = this._onUsage.event;
 
 		// const service = ProxyChannel.toService<LLMMessageChannel>(mainProcessService.getChannel('void-channel-sendLLMMessage')); // lets you call it like a service
 		// see llmMessageChannel.ts
@@ -84,6 +88,10 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 			this._clearChannelHooks(e.requestId);
 			console.error('Error in LLMMessageService:', JSON.stringify(e))
 		}))
+		this._register((this.channel.listen('onUsage_sendLLMMessage') satisfies Event<EventLLMMessageOnUsageParams>)(e => {
+			this.llmMessageHooks.onUsage[e.requestId]?.(e);
+			this._onUsage.fire(e);
+		}))
 		// .list()
 		this._register((this.channel.listen('onSuccess_list_ollama') satisfies Event<EventModelListOnSuccessParams<OllamaModelResponse>>)(e => {
 			this.listHooks.ollama.success[e.requestId]?.(e)
@@ -101,11 +109,11 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 	}
 
 	sendLLMMessage(params: ServiceSendLLMMessageParams) {
-		const { onText, onFinalMessage, onError, onAbort, modelSelection, ...proxyParams } = params;
+		const { onText, onFinalMessage, onError, onAbort, onUsage, modelSelection, ...proxyParams } = params;
 
 		// throw an error if no model/provider selected (this should usually never be reached, the UI should check this first, but might happen in cases like Apply where we haven't built much UI/checks yet, good practice to have check logic on backend)
 		if (modelSelection === null) {
-			const message = `Please add a provider in Void's Settings.`
+			const message = `Please add a provider in SUP's Settings.`
 			onError({ message, fullError: null })
 			return null
 		}
@@ -125,6 +133,7 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 		this.llmMessageHooks.onText[requestId] = onText
 		this.llmMessageHooks.onFinalMessage[requestId] = onFinalMessage
 		this.llmMessageHooks.onError[requestId] = onError
+		this.llmMessageHooks.onUsage[requestId] = onUsage ?? (() => { })
 		this.llmMessageHooks.onAbort[requestId] = onAbort // used internally only
 
 		// params will be stripped of all its functions over the IPC channel
@@ -186,6 +195,7 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 		delete this.llmMessageHooks.onText[requestId]
 		delete this.llmMessageHooks.onFinalMessage[requestId]
 		delete this.llmMessageHooks.onError[requestId]
+		delete this.llmMessageHooks.onUsage[requestId]
 
 		delete this.listHooks.ollama.success[requestId]
 		delete this.listHooks.ollama.error[requestId]
@@ -193,6 +203,9 @@ export class LLMMessageService extends Disposable implements ILLMMessageService 
 		delete this.listHooks.openAICompat.success[requestId]
 		delete this.listHooks.openAICompat.error[requestId]
 	}
+
+	private readonly _onUsage = new Emitter<EventLLMMessageOnUsageParams>();
+	public readonly onUsage: Event<EventLLMMessageOnUsageParams>;
 }
 
 registerSingleton(ILLMMessageService, LLMMessageService, InstantiationType.Eager);

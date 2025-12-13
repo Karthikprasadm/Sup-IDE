@@ -11,6 +11,8 @@
   "private": true,
   "scripts": {
     "buildreact": "cd ./src/vs/workbench/contrib/void/browser/react/ && node build.js && cd ../../../../../../../",
+    "postbuildreact": "node ./scripts/fix-react-brand.js",
+    "apply-patches": "powershell -ExecutionPolicy Bypass -File ./scripts/apply-local-patches.ps1",
     "watchreact": "cd ./src/vs/workbench/contrib/void/browser/react/ && node build.js --watch && cd ../../../../../../../",
     "watchreactd": "deemon npm run watchreact",
     "test": "echo Please run any of the test scripts from the scripts folder.",
@@ -21,6 +23,7 @@
     "preinstall": "node build/npm/preinstall.js",
     "postinstall": "node build/npm/postinstall.js",
     "compile": "node ./node_modules/gulp/bin/gulp.js compile",
+    "postcompile": "node ./scripts/copy-codicon.js",
     "watch": "npm-run-all -lp watch-client watch-extensions",
     "watchd": "deemon npm run watch",
     "watch-webd": "deemon npm run watch-web",
@@ -70,6 +73,25 @@
     "extensions-ci-pr": "node ./node_modules/gulp/bin/gulp.js extensions-ci-pr",
     "perf": "node scripts/code-perf.js",
     "update-build-ts-version": "npm install typescript@next && tsc -p ./build/tsconfig.build.json"
+  },
+  "overrides": {
+    "node-gyp-build": "4.8.1",
+    "kerberos@2.1.1": {
+      "node-addon-api": "7.1.0"
+    },
+    "@vscode/gulp-electron": "1.36.0",
+    "@electron/get": "2.0.2",
+    "@octokit/rest": "20.1.2",
+    "@octokit/core": "5.0.0",
+    "@octokit/plugin-paginate-rest": "9.2.2",
+    "@octokit/plugin-rest-endpoint-methods": "9.0.0",
+    "@octokit/request": "8.4.1",
+    "@octokit/request-error": "5.1.1",
+    "zod": "4.1.0",
+    "zod-to-json-schema": "3.25.0",
+    "@modelcontextprotocol/sdk": {
+      "zod": "4.1.0"
+    }
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
@@ -135,9 +157,11 @@
     "vscode-regexpp": "^3.1.0",
     "vscode-textmate": "9.2.0",
     "yauzl": "^3.0.0",
-    "yazl": "^2.4.3"
+    "yazl": "^2.4.3",
+    "zod": "4.1.0"
   },
   "devDependencies": {
+    "semver": "5.7.2",
     "@playwright/test": "^1.50.0",
     "@stylistic/eslint-plugin-ts": "^2.8.0",
     "@tailwindcss/typography": "^0.5.16",
@@ -164,7 +188,7 @@
     "@types/yauzl": "^2.10.0",
     "@types/yazl": "^2.4.2",
     "@typescript-eslint/utils": "^8.8.0",
-    "@vscode/gulp-electron": "^1.36.0",
+    "@vscode/gulp-electron": "1.36.0",
     "@vscode/l10n-dev": "0.0.35",
     "@vscode/telemetry-extractor": "^1.10.2",
     "@vscode/test-cli": "^0.0.6",
@@ -182,7 +206,7 @@
     "cssnano": "^6.0.3",
     "debounce": "^1.0.0",
     "deemon": "^1.8.0",
-    "electron": "34.3.2",
+    "electron": "^39.2.6",
     "eslint": "^9.11.1",
     "eslint-formatter-compact": "^8.40.0",
     "eslint-plugin-header": "3.1.1",
@@ -192,7 +216,7 @@
     "fancy-log": "^1.3.3",
     "file-loader": "^6.2.0",
     "glob": "^5.0.13",
-    "gulp": "^4.0.0",
+    "gulp": "^5.0.1",
     "gulp-azure-storage": "^0.12.1",
     "gulp-bom": "^3.0.0",
     "gulp-buffer": "0.0.2",
@@ -204,9 +228,8 @@
     "gulp-plumber": "^1.2.0",
     "gulp-rename": "^1.2.0",
     "gulp-replace": "^0.5.4",
-    "gulp-sourcemaps": "^3.0.0",
+    "gulp-sourcemaps": "^2.6.5",
     "gulp-svgmin": "^4.1.0",
-    "gulp-untar": "^0.0.7",
     "husky": "^0.13.1",
     "innosetup": "^6.4.1",
     "istanbul-lib-coverage": "^3.2.0",
@@ -241,6 +264,7 @@
     "source-map-support": "^0.3.2",
     "style-loader": "^3.3.2",
     "tailwindcss": "^3.4.17",
+    "tar": "^6.2.1",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.1",
     "tsec": "0.2.7",
@@ -255,18 +279,61 @@
     "xml2js": "^0.5.0",
     "yaserver": "^0.4.0"
   },
-  "overrides": {
-    "node-gyp-build": "4.8.1",
-    "kerberos@2.1.1": {
-      "node-addon-api": "7.1.0"
-    }
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/vscode.git"
   },
   "bugs": {
     "url": "https://github.com/microsoft/vscode/issues"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "sup.chat.askSelection",
+        "title": "Sup: Ask AI About Selection…",
+        "category": "Sup"
+      },
+      {
+        "command": "sup.chat.quickfixAI",
+        "title": "Sup: AI QuickFix",
+        "category": "Sup"
+      },
+      {
+        "command": "sup.chat.explain",
+        "title": "Sup: Explain Code",
+        "category": "Sup"
+      },
+      {
+        "command": "sup.chat.fix",
+        "title": "Sup: Fix Code",
+        "category": "Sup"
+      },
+      {
+        "command": "sup.chat.optimize",
+        "title": "Sup: Optimize Code",
+        "category": "Sup"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "sup.chat.askSelection",
+          "group": "navigation",
+          "when": "editorTextFocus"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "sup.chat.quickfixAI",
+          "group": "navigation",
+          "when": "editorHasCodeActionsProvider && editorTextFocus"
+        }
+      ],
+      "commandPalette": [
+      ]
+    },
+    "viewsContainers": {},
+    "views": {}
   },
   "optionalDependencies": {
     "windows-foreground-love": "0.5.0"
