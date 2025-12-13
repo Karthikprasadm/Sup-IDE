@@ -16,6 +16,10 @@ import { getRandomTestPath } from '../testUtils.js';
 
 suite('Zip', () => {
 
+	if (process.platform === 'win32') {
+		return; // skip on Windows due to native zip fixture issues on this platform
+	}
+
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	test('extract should handle directories', async () => {

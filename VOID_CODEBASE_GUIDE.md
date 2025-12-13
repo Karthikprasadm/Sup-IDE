@@ -1,10 +1,35 @@
 # Void Codebase Guide
 
-The Void codebase is not as intimidating as it seems!
+Friendly orientation for new contributors. This is about the code, not the build; for build/run/troubleshooting see `BUILDING.md`.
 
-Most of Void's code lives in the folder `src/vs/workbench/contrib/void/`.
+Most of Void/Sup lives in `src/vs/workbench/contrib/void/`.
 
-The purpose of this document is to explain how Void's codebase works. If you want build instructions instead, see [Contributing](https://github.com/voideditor/void/blob/main/HOW_TO_CONTRIBUTE.md).
+## What’s in this guide
+- How the VS Code/Sup architecture is laid out (main vs browser, common).
+- Key folders and what they do.
+- Core terminology (models, editors, workbench, services, actions).
+- How AI/LLM plumbing works (high level).
+- Where Apply/edit, settings, and approval state live.
+- Links for deeper VS Code references.
+
+---
+
+## Quick map of important folders
+- `src/vs/workbench/contrib/void/` — Sup/Void-specific features (AI sidebar, apply/edit, settings, MCP, etc.).
+- `src/vs/workbench/...` — core VS Code workbench pieces.
+- `src/vs/platform/` — cross-cutting platform services (storage, theming, telemetry, etc.).
+- `extensions/` — built-in extensions’ source.
+- `out/` — generated build output (don’t edit; delete to clean).
+- `build/` — build tooling and gulp tasks.
+- `scripts/` — helper scripts (`code.bat`/`code.sh` to run selfhost).
+- `product.json` — branding/config for Sup.
+
+## Getting oriented quickly
+1) Open `src/vs/workbench/contrib/void/` to see Sup-specific features.
+2) Skim `modelCapabilities`, `voidSettingsService`, and `voidSettingsTypes` to learn how models/providers/settings are wired.
+3) Look at `sendLLMMessage` flows (browser ↔ electron-main channel) for how requests leave the IDE.
+4) Find commands/actions by searching for their IDs (registered in contrib files) and services via `registerSingleton`.
+5) Use the diagrams below to anchor which process (browser vs main) owns a piece.
 
 
 
@@ -134,7 +159,7 @@ If you want to know how our build pipeline works, see our build repo [here](http
 
 For additional references, the Void team put together this list of links to get up and running with VSCode.
 <details>
-	
+
 
 #### Links for Beginners
 

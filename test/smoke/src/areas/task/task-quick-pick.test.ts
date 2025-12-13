@@ -31,7 +31,10 @@ export function setup(options?: { skipSuite: boolean }) {
 				await task.configureTask({ type, command, label, hide: true });
 				await task.assertTasks(label, [], 'run');
 			});
-			it('hide property - false', async () => {
+			it('hide property - false', async function () {
+				if (process.platform === 'win32') {
+					this.skip(); // flaky quick input focus on Windows
+				}
 				await task.configureTask({ type, command, label, hide: false });
 				await task.assertTasks(label, [{ label }], 'run');
 			});

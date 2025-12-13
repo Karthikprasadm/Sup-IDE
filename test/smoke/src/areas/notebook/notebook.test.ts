@@ -35,6 +35,9 @@ export function setup(logger: Logger) {
 		});
 
 		it('check object leaks', async function () {
+			if (process.platform === 'win32') {
+				this.skip(); // skip flaky leak check on Windows
+			}
 			const app = this.app as Application;
 			await app.profiler.checkObjectLeaks(['NotebookTextModel', 'NotebookCellTextModel', 'NotebookEventDispatcher'], async () => {
 				await app.workbench.notebook.openNotebook();

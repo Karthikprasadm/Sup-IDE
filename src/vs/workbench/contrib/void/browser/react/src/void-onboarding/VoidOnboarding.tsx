@@ -51,8 +51,8 @@ const VoidIcon = () => {
 			const theme = themeService.getColorTheme().type
 			const isDark = theme === ColorScheme.DARK || theme === ColorScheme.HIGH_CONTRAST_DARK
 			if (divRef.current) {
-				divRef.current.style.maxWidth = '220px'
-				divRef.current.style.opacity = '50%'
+				divRef.current.style.maxWidth = '260px'
+				divRef.current.style.opacity = '1'
 				divRef.current.style.filter = isDark ? '' : 'invert(1)' //brightness(.5)
 			}
 		}
@@ -275,7 +275,7 @@ const AddProvidersPage = ({ pageIndex, setPageIndex }: { pageIndex: number, setP
 // 	OnboardingPage
 // 		title:
 // 			div
-// 				"Welcome to Void"
+// 				"Welcome to Sup"
 // 			image
 // 		content:<></>
 // 		title
@@ -547,7 +547,7 @@ const VoidOnboardingContent = () => {
 					voidMetricsService.capture('Completed Onboarding', { selectedProviderName, wantToUseOption })
 				}}
 				ringSize={voidSettingsState.globalSettings.isOnboardingComplete ? 'screen' : undefined}
-			>Enter the Void</PrimaryActionButton>
+			>Enter Sup</PrimaryActionButton>
 		</div>
 	</div>
 
@@ -595,12 +595,12 @@ const VoidOnboardingContent = () => {
 	const contentOfIdx: { [pageIndex: number]: React.ReactNode } = {
 		0: <OnboardingPageShell
 			content={
-				<div className='flex flex-col items-center gap-8'>
-					<div className="text-5xl font-light text-center">Welcome to Void</div>
+					<div className='flex flex-col items-center gap-8'>
+					<div className="text-5xl font-light text-center">Welcome to Sup</div>
 
-					{/* Slice of Void image */}
+					{/* Slice of Sup image */}
 					<div className='max-w-md w-full h-[30vh] mx-auto flex items-center justify-center'>
-						{!isLinux && <VoidIcon />}
+						<VoidIcon />
 					</div>
 
 

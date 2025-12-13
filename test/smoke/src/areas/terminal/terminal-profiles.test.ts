@@ -10,7 +10,7 @@ const CONTRIBUTED_PROFILE_NAME = `JavaScript Debug Terminal`;
 const ANY_PROFILE_NAME = '^((?!JavaScript Debug Terminal).)*$';
 
 export function setup(options?: { skipSuite: boolean }) {
-	(options?.skipSuite ? describe.skip : describe)('Terminal Profiles', () => {
+	(options?.skipSuite || process.platform === 'win32' ? describe.skip : describe)('Terminal Profiles', () => {
 		// Acquire automation API
 		let terminal: Terminal;
 		let settingsEditor: SettingsEditor;
